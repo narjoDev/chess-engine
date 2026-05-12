@@ -1,0 +1,9 @@
+repos:
+  - repo: local
+    hooks:
+      - id: ruff-format
+        name: Ruff Format
+        description: Runs ruff format
+        entry: uv run ruff format .
+        files: \.py$
+        language: system
