@@ -114,7 +114,31 @@ class GameState:
         # piece being pinned? no
         # includes both captures and empty squares
         pass
-        # switch
+        # switch on piece type
+        # king
+        # adjacent squares within bounds of board
+        # queen
+        # all other squares in rank
+        # all other squares in file
+        # diagonals
+        # but stop on block
+        # rook
+        # bishop
+        # knight
+        # pawn
+
+        # potential helper generating lines of possible squares (no block yet)
+        # iterate through offsets
+        # for offset generate line out from piece (not including piece square)
+        # end on OOB
+        # with list of squares iterate and stop on piece (means a block, last one)
+
+        # ? generate_diagonals, generate_horizontals_verticals call below?
+        # ^ both applying an offset, so we can have 1 main helper generate_line_from_offset(square, offset tuple, optional length 1 limit)
+        # maybe blocking test isn't part of that?
+        # blocking filter truncates list of squares on first with piece (inclusive for enemy, exclusive for yours)
+
+        # maybe can do king, knight, pawn also as lines, but with limit length 1, same blocking logic should work
 
     def get_piece_movable_squares(self, piece) -> list[Square]:
         # includes attacked squares
