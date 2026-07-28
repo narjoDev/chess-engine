@@ -41,40 +41,37 @@ class Move:
 
 
 class Piece:
-    def __init__(self, color, piece_type):
-        self.color: Color = color
-        self.piece_type: PieceType = piece_type
+    def __init__(self, color: Color, piece_type: PieceType, square: Square):
+        self.color = color
+        self.piece_type = piece_type
+        self.square = square
         self.has_moved: bool = False
 
 
 class GameState:
     def __init__(self):
-        self.board: dict[Square, Piece] = {
-            Square(File.A, 1): Piece(Color.WHITE, PieceType.ROOK),
-            Square(File.B, 1): Piece(Color.WHITE, PieceType.KNIGHT),
-            Square(File.C, 1): Piece(Color.WHITE, PieceType.BISHOP),
-            Square(File.D, 1): Piece(Color.WHITE, PieceType.QUEEN),
-            Square(File.E, 1): Piece(Color.WHITE, PieceType.KING),
-            Square(File.F, 1): Piece(Color.WHITE, PieceType.BISHOP),
-            Square(File.G, 1): Piece(Color.WHITE, PieceType.KNIGHT),
-            Square(File.H, 1): Piece(Color.WHITE, PieceType.ROOK),
-            **{
-                Square(file, 2): Piece(Color.WHITE, PieceType.PAWN)
-                for file in list(File)
-            },
-            **{
-                Square(file, 7): Piece(Color.BLACK, PieceType.PAWN)
-                for file in list(File)
-            },
-            Square(File.A, 8): Piece(Color.BLACK, PieceType.ROOK),
-            Square(File.B, 8): Piece(Color.BLACK, PieceType.KNIGHT),
-            Square(File.C, 8): Piece(Color.BLACK, PieceType.BISHOP),
-            Square(File.D, 8): Piece(Color.BLACK, PieceType.QUEEN),
-            Square(File.E, 8): Piece(Color.BLACK, PieceType.KING),
-            Square(File.F, 8): Piece(Color.BLACK, PieceType.BISHOP),
-            Square(File.G, 8): Piece(Color.BLACK, PieceType.KNIGHT),
-            Square(File.H, 8): Piece(Color.BLACK, PieceType.ROOK),
-        }
+        self.pieces = [
+            Piece(Color.WHITE, PieceType.ROOK, Square(File.A, 1)),
+            Piece(Color.WHITE, PieceType.KNIGHT, Square(File.B, 1)),
+            Piece(Color.WHITE, PieceType.BISHOP, Square(File.C, 1)),
+            Piece(Color.WHITE, PieceType.QUEEN, Square(File.D, 1)),
+            Piece(Color.WHITE, PieceType.KING, Square(File.E, 1)),
+            Piece(Color.WHITE, PieceType.BISHOP, Square(File.F, 1)),
+            Piece(Color.WHITE, PieceType.KNIGHT, Square(File.G, 1)),
+            Piece(Color.WHITE, PieceType.ROOK, Square(File.H, 1)),
+            *[Piece(Color.WHITE, PieceType.PAWN, Square(file, 2)) for file in File],
+            *[Piece(Color.BLACK, PieceType.PAWN, Square(file, 7)) for file in File],
+            Piece(Color.BLACK, PieceType.ROOK, Square(File.A, 8)),
+            Piece(Color.BLACK, PieceType.KNIGHT, Square(File.B, 8)),
+            Piece(Color.BLACK, PieceType.BISHOP, Square(File.C, 8)),
+            Piece(Color.BLACK, PieceType.QUEEN, Square(File.D, 8)),
+            Piece(Color.BLACK, PieceType.KING, Square(File.E, 8)),
+            Piece(Color.BLACK, PieceType.BISHOP, Square(File.F, 8)),
+            Piece(Color.BLACK, PieceType.KNIGHT, Square(File.G, 8)),
+            Piece(Color.BLACK, PieceType.ROOK, Square(File.H, 8)),
+        ]
+
+        self.board: dict[Square, Piece] = {piece.square: piece for piece in self.pieces}
         self.mover = Color.WHITE
         self.moves: list = []
 
@@ -82,7 +79,10 @@ class GameState:
         # is it the right player's turn?
         # can piece move like that
         # is piece blocking or in between
-        # will mover's king enter check (handles pins)
+        # will mover's king enter (or stay in) check (handles pins)
+        # make move
+        # is color in check
+        # unmake last move
         pass
 
     def get_legal_moves(self) -> list[Move]:
@@ -114,6 +114,7 @@ class GameState:
         # piece being pinned? no
         # includes both captures and empty squares
         pass
+        # switch
 
     def get_piece_movable_squares(self, piece) -> list[Square]:
         # includes attacked squares
