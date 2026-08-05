@@ -15,6 +15,11 @@ class PieceType(Enum):
     KNIGHT = "KNIGHT"
     PAWN = "PAWN"
 
+    # attack_offset(self) ...
+    # e.g.: bishop: [(-1, -1), (-1, 1), (1, -1), (1, 1)]
+    #       pawn: [(-1, 1), (1, 1)]
+    # is_single_mover(self)
+
 
 class File(Enum):
     A = "A"
@@ -128,7 +133,7 @@ class GameState:
         # pawn
 
         # potential helper generating lines of possible squares (no block yet)
-        # iterate through offsets
+        # iterate through x/y offsets (relative to color facing dir.)
         # for offset generate line out from piece (not including piece square)
         # end on OOB
         # with list of squares iterate and stop on piece (means a block, last one)
@@ -140,7 +145,15 @@ class GameState:
 
         # maybe can do king, knight, pawn also as lines, but with limit length 1, same blocking logic should work
 
-    def get_piece_movable_squares(self, piece) -> list[Square]:
-        # includes attacked squares
-        # only different from get_piece_attacked_squares for PAWNS
+        # data per piece type: List<offsets>, bool islimit1
+        # pawns: flip per color
+
+    def get_piece_movable_squares(self, piece: Piece) -> list[Square]:
+        # "movable" includes attacked squares
+        # excludes squares with friendly pieces
+        # does not take into account pins
+        if piece.piece_type != PieceType.PAWN:
+            return self.get_piece_attacked_squares(piece)
+
+        # PAWN: offset always (0, 1) - if hasn't moved also (0, 2)
         pass
