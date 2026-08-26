@@ -1,5 +1,6 @@
 from enum import Enum
 from dataclasses import dataclass
+from typing import Optional
 
 
 class Color(Enum):
@@ -15,28 +16,67 @@ class PieceType(Enum):
     KNIGHT = "KNIGHT"
     PAWN = "PAWN"
 
-    # attack_offset(self) ...
-    # e.g.: bishop: [(-1, -1), (-1, 1), (1, -1), (1, 1)]
-    #       pawn: [(-1, 1), (1, 1)]
-    # is_single_mover(self)
+    def attack_direction(self):
+        # (file, rank) offset convention e.g. e4
+
+        diagonals = {(-1, -1), (-1, 1), (1, -1), (1, 1)}
+        horizontal_vertical = {(0, 1), (0, -1), (1, 0), (-1, 0)}
+
+        if self == PieceType.ROOK:
+            return horizontal_vertical
+        elif self in {PieceType.KING, PieceType.QUEEN}:
+            return horizontal_vertical | diagonals
+        elif self == PieceType.BISHOP:
+            return diagonals
+        elif self == PieceType.KNIGHT:
+            return {(-2, -1), (-2, 1), (2, -1), (2, 1), (1, 2), (1, -2), (-1, 2), (-1, -2)}
+        elif self == PieceType.PAWN:
+            # This is following white for now (bottom left is a1)
+            # TODO: figure out how to make this work for both white and black
+            return {(-1, 1), (1, 1)}
+        else:
+            raise ValueError(f"Unknown enum {self}")
+
+    def can_only_move_distance_1(self) -> bool:
+        return self in {PieceType.KING, PieceType.PAWN}
 
 
 class File(Enum):
-    A = "A"
-    B = "B"
-    C = "C"
-    D = "D"
-    E = "E"
-    F = "F"
-    G = "G"
-    H = "H"
+    A = 1
+    B = 2
+    C = 3
+    D = 4
+    E = 5
+    F = 6
+    G = 7
+    H = 8
+
+    @classmethod
+    def is_within_bounds(cls, value: int) -> bool:
+        return value >= 1 and value <= 8
+
+def is_rank_within_bounds(value: int) -> bool:
+    return value >= 1 and value <= 8
 
 
+@dataclass(frozen=True)
 class Square:
-    def __init__(self, file: File, rank: int):
-        assert rank >= 1 and rank <= 8
-        self.file = file
-        self.rank = rank
+    file: File
+    rank: int
+
+    def __post_init__(self):
+        assert self.rank >= 1 and self.rank <= 8
+
+    def offset(self, offset_file: int, offset_rank: int) -> Optional["Square"]:
+        new_file_value: int = self.file.value + offset_file
+        if not File.is_within_bounds(new_file_value):
+            return None
+
+        new_rank_value: int = self.rank + offset_rank
+        if not is_rank_within_bounds(new_rank_value):
+            return None
+
+        return Square(File(new_file_value), new_rank_value)
 
 
 @dataclass
@@ -91,6 +131,7 @@ class GameState:
         pass
 
     def get_legal_moves(self) -> list[Move]:
+        # Call `get_piece_movable_squares` and filter using `is_move_legal`
         pass
 
     def is_color_in_check(self, color: Color) -> bool:
@@ -113,12 +154,12 @@ class GameState:
     def unmake_last_move(self) -> bool:
         pass
 
-    def get_piece_attacked_squares(self, piece) -> list[Square]:
+    def get_piece_attacked_squares(self, piece: Piece) -> list[Square]:
         # takes into account:
         # blocks? yes
         # piece being pinned? no
         # includes both captures and empty squares
-        pass
+        
         # switch on piece type
         # king
         # adjacent squares within bounds of board
@@ -147,6 +188,44 @@ class GameState:
 
         # data per piece type: List<offsets>, bool islimit1
         # pawns: flip per color
+
+        BOARD_DIM = 8
+
+        attacked_squares = []
+
+        # for my piece, visit every possible "direction"
+        for direction in piece.piece_type.attack_direction():
+            (direction_file, direction_rank) = direction
+
+            # for pieces that can move more than 1 distance, iterate until blocked
+            if piece.piece_type.can_only_move_distance_1():
+                distance_limit = 1
+            else:
+                distance_limit = BOARD_DIM
+
+            for distance in range(distance_limit):
+
+                offset_file = distance * direction_file
+                offset_rank = distance * direction_rank
+
+                candidate_square: Optional[Square] = piece.square.offset(offset_file, offset_rank)
+                # bounds check
+                if not candidate_square:
+                    break
+
+                # square already occupied check
+                if candidate_square in self.board:
+                    existing_piece = self.board[candidate_square]
+                    is_same_color = piece.color == existing_piece.color
+
+                    if not is_same_color:
+                        attacked_squares.append(candidate_square)
+                    break
+
+                # TODO any other checks?
+
+                attacked_squares.append(candidate_square)
+
 
     def get_piece_movable_squares(self, piece: Piece) -> list[Square]:
         # "movable" includes attacked squares
