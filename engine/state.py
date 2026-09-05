@@ -16,7 +16,7 @@ class PieceType(Enum):
     KNIGHT = "KNIGHT"
     PAWN = "PAWN"
 
-    def attack_direction(self):
+    def attack_direction(self, color: Color) -> set[tuple[int, int]]:
         # (file, rank) offset convention e.g. e4
 
         diagonals = {(-1, -1), (-1, 1), (1, -1), (1, 1)}
@@ -29,16 +29,26 @@ class PieceType(Enum):
         elif self == PieceType.BISHOP:
             return diagonals
         elif self == PieceType.KNIGHT:
-            return {(-2, -1), (-2, 1), (2, -1), (2, 1), (1, 2), (1, -2), (-1, 2), (-1, -2)}
+            return {
+                (-2, -1),
+                (-2, 1),
+                (2, -1),
+                (2, 1),
+                (1, 2),
+                (1, -2),
+                (-1, 2),
+                (-1, -2),
+            }
         elif self == PieceType.PAWN:
-            # This is following white for now (bottom left is a1)
-            # TODO: figure out how to make this work for both white and black
-            return {(-1, 1), (1, 1)}
+            if color == Color.WHITE:
+                return {(-1, 1), (1, 1)}
+            else:
+                return {(-1, -1), (1, -1)}
         else:
             raise ValueError(f"Unknown enum {self}")
 
     def can_only_move_distance_1(self) -> bool:
-        return self in {PieceType.KING, PieceType.PAWN}
+        return self in {PieceType.KING, PieceType.KNIGHT, PieceType.PAWN}
 
 
 class File(Enum):
@@ -54,6 +64,7 @@ class File(Enum):
     @classmethod
     def is_within_bounds(cls, value: int) -> bool:
         return value >= 1 and value <= 8
+
 
 def is_rank_within_bounds(value: int) -> bool:
     return value >= 1 and value <= 8
@@ -121,6 +132,15 @@ class GameState:
         self.moves: list = []
 
     def is_move_legal(self, move: Move) -> bool:
+        """Check if a move (start square, end square) is legal.
+        Checks include:
+            - the start square contains a piece
+            - it is the moving player's turn
+            - the piece can move in the direction specified
+            - the piece is not blocked from the end square
+            - if the move captures, the captured piece is the opposite color
+            - the move does not place the mover in check (handles pins)
+        """
         # is it the right player's turn?
         # can piece move like that
         # is piece blocking or in between
@@ -131,6 +151,7 @@ class GameState:
         pass
 
     def get_legal_moves(self) -> list[Move]:
+        """Get all legal moves for the current player."""
         # Call `get_piece_movable_squares` and filter using `is_move_legal`
         pass
 
@@ -159,34 +180,7 @@ class GameState:
         # blocks? yes
         # piece being pinned? no
         # includes both captures and empty squares
-        
-        # switch on piece type
-        # king
-        # adjacent squares within bounds of board
-        # queen
-        # all other squares in rank
-        # all other squares in file
-        # diagonals
-        # but stop on block
-        # rook
-        # bishop
-        # knight
-        # pawn
 
-        # potential helper generating lines of possible squares (no block yet)
-        # iterate through x/y offsets (relative to color facing dir.)
-        # for offset generate line out from piece (not including piece square)
-        # end on OOB
-        # with list of squares iterate and stop on piece (means a block, last one)
-
-        # ? generate_diagonals, generate_horizontals_verticals call below?
-        # ^ both applying an offset, so we can have 1 main helper generate_line_from_offset(square, offset tuple, optional length 1 limit)
-        # maybe blocking test isn't part of that?
-        # blocking filter truncates list of squares on first with piece (inclusive for enemy, exclusive for yours)
-
-        # maybe can do king, knight, pawn also as lines, but with limit length 1, same blocking logic should work
-
-        # data per piece type: List<offsets>, bool islimit1
         # pawns: flip per color
 
         BOARD_DIM = 8
@@ -194,8 +188,8 @@ class GameState:
         attacked_squares = []
 
         # for my piece, visit every possible "direction"
-        for direction in piece.piece_type.attack_direction():
-            (direction_file, direction_rank) = direction
+        for direction in piece.piece_type.attack_direction(piece.color):
+            direction_file, direction_rank = direction
 
             # for pieces that can move more than 1 distance, iterate until blocked
             if piece.piece_type.can_only_move_distance_1():
@@ -204,11 +198,12 @@ class GameState:
                 distance_limit = BOARD_DIM
 
             for distance in range(distance_limit):
-
                 offset_file = distance * direction_file
                 offset_rank = distance * direction_rank
 
-                candidate_square: Optional[Square] = piece.square.offset(offset_file, offset_rank)
+                candidate_square: Optional[Square] = piece.square.offset(
+                    offset_file, offset_rank
+                )
                 # bounds check
                 if not candidate_square:
                     break
@@ -226,6 +221,7 @@ class GameState:
 
                 attacked_squares.append(candidate_square)
 
+        return attacked_squares
 
     def get_piece_movable_squares(self, piece: Piece) -> list[Square]:
         # "movable" includes attacked squares
