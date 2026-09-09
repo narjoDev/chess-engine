@@ -68,7 +68,60 @@ class TestParams:
                 "h4",
             },
         ),
+        TestParams(
+            test_case_name="Knight in the corner doesn't go off the board",
+            input_piece_to_evaluate=Piece(
+                Color.WHITE, PieceType.KNIGHT, Square(File.A, 1)
+            ),
+            other_input_pieces=[],
+            expected_moves={"b3", "c2"},
+        ),
+        TestParams(
+            test_case_name="Queen can move onto enemy position",
+            input_piece_to_evaluate=Piece(
+                Color.WHITE, PieceType.QUEEN, Square(File.E, 4)
+            ),
+            other_input_pieces=[Piece(Color.BLACK, PieceType.PAWN, Square(File.E, 6))],
+            expected_moves={
+                # NOTE: you can visually inspect with render_expected_moves
+                "a4",
+                "a8",
+                "b1",
+                "b4",
+                "b7",
+                "c2",
+                "c4",
+                "c6",
+                "d3",
+                "d4",
+                "d5",
+                "e1",
+                "e2",
+                "e3",
+                "e5",
+                "e6",
+                "f3",
+                "f4",
+                "f5",
+                "g2",
+                "g4",
+                "g6",
+                "h1",
+                "h4",
+                "h7",
+            },
+        ),
+        TestParams(
+            # NOTE: the function being tested does NOT check threatened squares
+            test_case_name="King cannot move into threatened squares",
+            input_piece_to_evaluate=Piece(
+                Color.WHITE, PieceType.KING, Square(File.E, 4)
+            ),
+            other_input_pieces=[Piece(Color.BLACK, PieceType.ROOK, Square(File.A, 5))],
+            expected_moves={"d3", "d4", "d5", "e3", "e5", "f3", "f4", "f5"},
+        ),
     ],
+    ids=lambda test_params: test_params.test_case_name,
 )
 def test_get_piece_attacked_squares(test_params: TestParams):
 
@@ -77,3 +130,18 @@ def test_get_piece_attacked_squares(test_params: TestParams):
     )
     squares = game_state.get_piece_attacked_squares(test_params.input_piece_to_evaluate)
     assert set(squares) == test_params._expected_moves
+
+
+# For debug visualization
+def render_expected_moves(expected_moves: set[str]) -> str:
+    rows = ["  a b c d e f g h"]
+
+    for rank in range(8, 0, -1):
+        cells = [
+            "X" if f"{file.name.lower()}{rank}" in expected_moves else "."
+            for file in File
+        ]
+        rows.append(f"{rank} {' '.join(cells)} {rank}")
+
+    rows.append("  a b c d e f g h")
+    return "\n".join(rows)
