@@ -76,4 +76,4 @@ def test_get_piece_attacked_squares(test_params: TestParams):
         pieces=[test_params.input_piece_to_evaluate] + test_params.other_input_pieces
     )
     squares = game_state.get_piece_attacked_squares(test_params.input_piece_to_evaluate)
-    assert set(squares) == test_params.expected_moves
+    assert set(squares) == test_params._expected_moves
