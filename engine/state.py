@@ -105,8 +105,8 @@ class Piece:
 
 
 class GameState:
-    def __init__(self):
-        self.pieces = [
+    def __init__(self, pieces: Optional[list[Piece]] = None):
+        self.pieces = pieces or [
             Piece(Color.WHITE, PieceType.ROOK, Square(File.A, 1)),
             Piece(Color.WHITE, PieceType.KNIGHT, Square(File.B, 1)),
             Piece(Color.WHITE, PieceType.BISHOP, Square(File.C, 1)),
@@ -197,7 +197,7 @@ class GameState:
             else:
                 distance_limit = BOARD_DIM
 
-            for distance in range(distance_limit):
+            for distance in range(1, distance_limit + 1):
                 offset_file = distance * direction_file
                 offset_rank = distance * direction_rank
 
