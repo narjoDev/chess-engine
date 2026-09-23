@@ -156,13 +156,20 @@ class GameState:
         pass
 
     def is_color_in_check(self, color: Color) -> bool:
-        # get king square
-        # for each enemy piece
-        # get attacked squares
-        # if king square in attacked squares return true
-        # end loop
-        # return false
-        pass
+        # check if king square is in enemy's attack squares
+
+        king_square = None
+        for piece in self.pieces:
+            if piece.color == color and piece.piece_type == PieceType.KING:
+                king_square = piece.square
+                break
+
+        enemy_attack_squares = []
+        for piece in self.pieces:
+            if piece.color != color:
+                enemy_attack_squares += self.get_piece_attacked_squares(piece)
+
+        return king_square in enemy_attack_squares
 
     def is_color_in_checkmate(self, color: Color) -> bool:
         # in check true

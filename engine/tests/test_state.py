@@ -132,6 +132,25 @@ def test_get_piece_attacked_squares(test_params: TestParams):
     assert set(squares) == test_params._expected_moves
 
 
+# Tests that King is not in check by default
+def test_is_color_in_check_false_by_default():
+
+    game_state = GameState()
+    assert not game_state.is_color_in_check(Color.WHITE)
+
+
+# Tests that King in check from a piece
+def test_is_color_in_check():
+
+    game_state = GameState(
+        pieces=[
+            Piece(Color.WHITE, PieceType.KING, Square(File.E, 4)),
+            Piece(Color.BLACK, PieceType.ROOK, Square(File.E, 5)),
+        ]
+    )
+    assert game_state.is_color_in_check(Color.WHITE)
+
+
 # For debug visualization
 def render_expected_moves(expected_moves: set[str]) -> str:
     rows = ["  a b c d e f g h"]
