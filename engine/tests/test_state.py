@@ -151,6 +151,23 @@ def test_is_color_in_check():
     assert game_state.is_color_in_check(Color.WHITE)
 
 
+# Tests that `get_piece_movable_squares` has pawn moves and attacks
+# whereas `get_piece_attackable_squares` has pawn attacks
+def test_pawn_move_vs_attack():
+
+    pawn = Piece(Color.WHITE, PieceType.PAWN, Square(File.E, 2))
+    game_state = GameState(pieces=[pawn])
+
+    move_attack = game_state.get_piece_movable_squares(pawn)
+
+    expected_attack = {Square(File.D, 3), Square(File.F, 3)}
+    expected_move = {Square(File.E, 3), Square(File.E, 4)}
+    assert set(move_attack) == (expected_attack | expected_move)
+
+    # TODO: move the pawn, check only move 1
+    # TODO: test black not just white
+
+
 # For debug visualization
 def render_expected_moves(expected_moves: set[str]) -> str:
     rows = ["  a b c d e f g h"]

@@ -40,12 +40,21 @@ class PieceType(Enum):
                 (-1, -2),
             }
         elif self == PieceType.PAWN:
-            if color == Color.WHITE:
-                return {(-1, 1), (1, 1)}
-            else:
-                return {(-1, -1), (1, -1)}
+            dir = PieceType.pawn_direction_sign(color)
+            return {(-1, dir * 1), (1, dir * 1)}
         else:
             raise ValueError(f"Unknown enum {self}")
+
+    def move_direction(self, color: Color):
+        if self != PieceType.PAWN:
+            return self.attack_direction(color)
+
+        # PAWN
+        return {(0, PieceType.pawn_direction_sign(color) * 1)}
+
+    @staticmethod
+    def pawn_direction_sign(color: Color) -> int:
+        return 1 if Color.WHITE else -1
 
     def can_only_move_distance_1(self) -> bool:
         return self in {PieceType.KING, PieceType.KNIGHT, PieceType.PAWN}
@@ -88,6 +97,9 @@ class Square:
             return None
 
         return Square(File(new_file_value), new_rank_value)
+
+    def __repr__(self):
+        return f"{self.file.name}{self.rank}"
 
 
 @dataclass
@@ -176,8 +188,20 @@ class GameState:
         # and legal moves empty
         pass
 
-    def make_move(self, move: Move) -> bool:
-        pass
+    def make_move(self, move: Move) -> None:
+        """Makes move assuming the move is legal"""
+
+        # TODO: Record history
+
+        # Remove captured piece
+        self.pieces = [piece for piece in self.pieces if piece.square != move.end]
+
+        # Move the piece
+        move_piece = self.board[move.start]
+        move_piece.has_moved = True
+        move_piece.square = move.end
+        self.board[move.end] = move_piece
+        del self.board[move.start]
 
     def unmake_last_move(self) -> bool:
         pass
@@ -234,8 +258,24 @@ class GameState:
         # "movable" includes attacked squares
         # excludes squares with friendly pieces
         # does not take into account pins
-        if piece.piece_type != PieceType.PAWN:
-            return self.get_piece_attacked_squares(piece)
+        squares = self.get_piece_attacked_squares(piece)
 
-        # PAWN: offset always (0, 1) - if hasn't moved also (0, 2)
-        pass
+        if piece.piece_type != PieceType.PAWN:
+            return squares
+
+        # Pawn move by 1
+        pawn_move_1_offsets: set[tuple[int, int]] = piece.piece_type.move_direction(
+            piece.color
+        )
+        for f, r in pawn_move_1_offsets:
+            square = piece.square.offset(f, r)
+            if square:
+                squares.append(square)
+
+            # Pawn move by 2
+            if not piece.has_moved:
+                square = piece.square.offset(f, r * 2)
+                if square:
+                    squares.append(square)
+
+        return squares
