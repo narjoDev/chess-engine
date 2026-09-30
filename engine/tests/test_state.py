@@ -2,7 +2,6 @@ import pytest
 
 from engine.state import *
 
-
 # TODO: parameterize for more pieces
 # TODO: test pins
 # TODO: test if piece is blocked
@@ -164,8 +163,31 @@ def test_pawn_move_vs_attack():
     expected_move = {Square(File.E, 3), Square(File.E, 4)}
     assert set(move_attack) == (expected_attack | expected_move)
 
-    # TODO: move the pawn, check only move 1
-    # TODO: test black not just white
+
+def test_pawn_move_that_has_moved():
+
+    pawn = Piece(Color.WHITE, PieceType.PAWN, Square(File.E, 2))
+    game_state = GameState(pieces=[pawn])
+
+    game_state.make_move(Move(Square(File.E, 2), Square(File.E, 3)))
+
+    move_attack = game_state.get_piece_movable_squares(pawn)
+
+    expected_attack = {Square(File.D, 4), Square(File.F, 4)}
+    expected_move = {Square(File.E, 4)}
+    assert set(move_attack) == (expected_attack | expected_move)
+
+
+def test_pawn_move_black():
+
+    pawn = Piece(Color.BLACK, PieceType.PAWN, Square(File.E, 7))
+    game_state = GameState(pieces=[pawn])
+
+    move_attack = game_state.get_piece_movable_squares(pawn)
+
+    expected_attack = {Square(File.D, 6), Square(File.F, 6)}
+    expected_move = {Square(File.E, 6), Square(File.E, 5)}
+    assert set(move_attack) == (expected_attack | expected_move)
 
 
 # For debug visualization

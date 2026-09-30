@@ -54,7 +54,7 @@ class PieceType(Enum):
 
     @staticmethod
     def pawn_direction_sign(color: Color) -> int:
-        return 1 if Color.WHITE else -1
+        return 1 if color == Color.WHITE else -1
 
     def can_only_move_distance_1(self) -> bool:
         return self in {PieceType.KING, PieceType.KNIGHT, PieceType.PAWN}
