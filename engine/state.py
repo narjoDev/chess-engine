@@ -148,19 +148,40 @@ class GameState:
         Checks include:
             - the start square contains a piece
             - it is the moving player's turn
-            - the piece can move in the direction specified
-            - the piece is not blocked from the end square
+            - end square is included in movable squares
+                - (the piece can move in the direction specified)
+                - (the piece is not blocked from the end square)
             - if the move captures, the captured piece is the opposite color
             - the move does not place the mover in check (handles pins)
         """
-        # is it the right player's turn?
-        # can piece move like that
-        # is piece blocking or in between
-        # will mover's king enter (or stay in) check (handles pins)
-        # make move
-        # is color in check
-        # unmake last move
-        pass
+        # the start square contains a piece
+        moving_piece = self.board.get(move.start)
+        if not moving_piece:
+            return False
+
+        # it is the moving player's turn
+        if moving_piece.color != self.mover:
+            return False
+
+        # end square is included in movable squares
+        if move.end not in self.get_piece_movable_squares(moving_piece):
+            return False
+
+        # if the move captures, the captured piece is the opposite color
+        captured_piece = self.board.get(move.end)
+        if captured_piece and captured_piece.color == moving_piece.color:
+            return False
+
+        # the move does not place the mover in check (handles pins)
+        self.make_move(move)
+        is_in_check = self.is_color_in_check(moving_piece.color)
+        # TODO: implement unmake_last_move
+        self.unmake_last_move()
+        if is_in_check:
+            return False
+
+        # TODO: test
+        return True
 
     def get_legal_moves(self) -> list[Move]:
         """Get all legal moves for the current player."""
