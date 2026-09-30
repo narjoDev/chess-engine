@@ -2,12 +2,7 @@ import pytest
 
 from engine.state import *
 
-# TODO: parameterize for more pieces
 # TODO: test pins
-# TODO: test if piece is blocked
-# TODO: `game_state` is initialized with default positions
-
-# TODO: create the test with a very specific and simple board
 
 
 @dataclass
@@ -31,7 +26,7 @@ class TestParams:
     "test_params",
     [
         TestParams(
-            test_case_name="King basic",
+            test_case_name="King in open attacks surrounding squares",
             input_piece_to_evaluate=Piece(
                 Color.WHITE, PieceType.KING, Square(File.E, 4)
             ),
@@ -48,7 +43,7 @@ class TestParams:
             },
         ),
         TestParams(
-            test_case_name="Rook with friendly piece in the way",
+            test_case_name="Rook is blocked by friendly piece",
             input_piece_to_evaluate=Piece(
                 Color.WHITE, PieceType.ROOK, Square(File.E, 4)
             ),
@@ -76,7 +71,7 @@ class TestParams:
             expected_moves={"b3", "c2"},
         ),
         TestParams(
-            test_case_name="Queen can move onto enemy position",
+            test_case_name="Queen can attack enemy occupied square",
             input_piece_to_evaluate=Piece(
                 Color.WHITE, PieceType.QUEEN, Square(File.E, 4)
             ),
@@ -111,8 +106,8 @@ class TestParams:
             },
         ),
         TestParams(
-            # NOTE: the function being tested does NOT check threatened squares
-            test_case_name="King cannot move into threatened squares",
+            # NOTE: get_piece_attacked_squares does not filter out losing moves (e.g., moving into check)
+            test_case_name="King attacked squares DOES include threatened squares",
             input_piece_to_evaluate=Piece(
                 Color.WHITE, PieceType.KING, Square(File.E, 4)
             ),
