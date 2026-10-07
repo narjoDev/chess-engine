@@ -106,6 +106,8 @@ class Square:
 class Move:
     start: Square
     end: Square
+    en_passant_captured_square: Optional[Square] = None
+    # TODO: consider including captured square in all captures
 
 
 class Piece:
@@ -114,6 +116,14 @@ class Piece:
         self.piece_type = piece_type
         self.square = square
         self.has_moved: bool = False
+
+
+@dataclass
+class HistoryItem:
+    move: Move
+    captured_piece: Optional[Piece] = None
+    # TODO: handle castling
+    # TODO: handle promotion
 
 
 class GameState:
@@ -141,7 +151,7 @@ class GameState:
 
         self.board: dict[Square, Piece] = {piece.square: piece for piece in self.pieces}
         self.mover = Color.WHITE
-        self.moves: list = []
+        self.history: list[HistoryItem] = []
 
     def is_move_legal(self, move: Move) -> bool:
         """Check if a move (start square, end square) is legal.
@@ -212,10 +222,15 @@ class GameState:
     def make_move(self, move: Move) -> None:
         """Makes move assuming the move is legal"""
 
-        # TODO: Record history
-
-        # Remove captured piece
-        self.pieces = [piece for piece in self.pieces if piece.square != move.end]
+        if move.en_passant_captured_square:
+            captured_piece = self.board.get(move.en_passant_captured_square)
+        else:
+            captured_piece = self.board.get(move.end)
+        self.history.append(HistoryItem(move=move, captured_piece=captured_piece))
+        if captured_piece:
+            # Remove captured piece
+            self.pieces = [piece for piece in self.pieces if piece != captured_piece]
+            del self.board[captured_piece.square]
 
         # Move the piece
         move_piece = self.board[move.start]
