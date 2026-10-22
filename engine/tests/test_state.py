@@ -185,6 +185,27 @@ def test_pawn_move_black():
     assert set(move_attack) == (expected_attack | expected_move)
 
 
+def test_pawn_is_blocked():
+
+    white_pawn = Piece(Color.WHITE, PieceType.PAWN, Square(File.E, 2))
+    black = Piece(Color.BLACK, PieceType.PAWN, Square(File.E, 3))
+    game_state = GameState(pieces=[white_pawn, black])
+
+    move_attack = game_state.get_piece_movable_squares(white_pawn)
+    assert not move_attack
+
+
+# # TODO en passant
+# def test_pawn_en_passant():
+
+#     white_pawn = Piece(Color.WHITE, PieceType.PAWN, Square(File.D, 2))
+#     black_pawn = Piece(Color.BLACK, PieceType.PAWN, Square(File.C, 4))
+#     game_state = GameState(pieces=[white_pawn, black_pawn])
+
+#     # Test that en passant is an allowable move
+#     # Test that en passant moves to the correct square and captures
+
+
 # Tests positive and negative of:
 #   (1) the start square contains a piece
 #   (2) it is the moving player's turn
@@ -253,7 +274,6 @@ def test_is_move_legal_5_mover_is_pinned_v2():
     assert game_state.is_move_legal(Move(Square(File.E, 2), Square(File.D, 2)))
 
 
-# TODO en-passant
 # TODO Test:
 #   (6) make sure unmake last move is correctly reverting board state
 

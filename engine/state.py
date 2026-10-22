@@ -163,6 +163,7 @@ class GameState:
                 - (the piece is not blocked from the end square)
             - if the move captures, the captured piece is the opposite color
             - the move does not place the mover in check (handles pins)
+            - TODO there must be a piece in the "captured square"
         """
         # the start square contains a piece
         moving_piece = self.board.get(move.start)
@@ -178,6 +179,7 @@ class GameState:
             return False
 
         # if the move captures, the captured piece is the opposite color
+        # TODO en passant
         captured_piece = self.board.get(move.end)
         if captured_piece and captured_piece.color == moving_piece.color:
             return False
@@ -261,6 +263,8 @@ class GameState:
         moved_piece.square = move.start
 
     def get_piece_attacked_squares(self, piece: Piece) -> list[Square]:
+        # NOTE: "attacked" squares are threatened squares and might not be movable (in the case of pawns)
+
         # takes into account:
         # blocks? yes
         # piece being pinned? no
@@ -301,15 +305,15 @@ class GameState:
                     if not is_same_color:
                         attacked_squares.append(candidate_square)
                     break
-
-                # TODO any other checks?
-
-                attacked_squares.append(candidate_square)
+                else:
+                    attacked_squares.append(candidate_square)
 
         return attacked_squares
 
     def get_piece_movable_squares(self, piece: Piece) -> list[Square]:
-        # NOTE: "movable" includes attacked squares
+        # NOTE: "movable" includes all "attackable" (i.e. threatened) squares
+        #       and has special logic for pawns moving 2 squares
+
         # excludes squares with friendly pieces
         # does not take into account pins
         squares = self.get_piece_attacked_squares(piece)
@@ -323,13 +327,16 @@ class GameState:
         )
         for f, r in pawn_move_1_offsets:
             square = piece.square.offset(f, r)
-            if square:
-                squares.append(square)
+            if not square:
+                break
+            if square in self.board:
+                break
+            squares.append(square)
 
             # Pawn move by 2
             if piece.number_of_moves == 0:
                 square = piece.square.offset(f, r * 2)
-                if square:
+                if square and square not in self.board:
                     squares.append(square)
 
         return squares
