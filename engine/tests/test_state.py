@@ -185,6 +185,79 @@ def test_pawn_move_black():
     assert set(move_attack) == (expected_attack | expected_move)
 
 
+# Tests positive and negative of:
+#   (1) the start square contains a piece
+#   (2) it is the moving player's turn
+#   (3) end square is included in movable squares
+#   (4) if the move captures, the captured piece is the opposite color
+#   (5) the move does not place the mover in check (handles pins)
+def test_is_move_legal_positive():
+    white_queen = Piece(Color.WHITE, PieceType.QUEEN, Square(File.E, 2))
+    black_queen = Piece(Color.BLACK, PieceType.QUEEN, Square(File.E, 3))
+    game_state = GameState(pieces=[white_queen, black_queen])
+    assert game_state.is_move_legal(Move(Square(File.E, 2), Square(File.E, 3)))
+
+
+def test_is_move_legal_1_start_square_contains_a_piece():
+    game_state = GameState()
+    assert not game_state.is_move_legal(Move(Square(File.E, 4), Square(File.E, 5)))
+
+
+def test_is_move_legal_2_is_it_the_moving_players_turn():
+    # moving black but it's white's turn
+    white_queen = Piece(Color.WHITE, PieceType.QUEEN, Square(File.E, 2))
+    black_queen = Piece(Color.BLACK, PieceType.QUEEN, Square(File.E, 3))
+    game_state = GameState(pieces=[white_queen, black_queen])
+    assert not game_state.is_move_legal(Move(Square(File.E, 3), Square(File.E, 2)))
+
+
+def test_is_move_legal_3_end_square_is_in_movable_squares():
+    game_state = GameState()
+    assert not game_state.is_move_legal(Move(Square(File.E, 2), Square(File.E, 5)))
+
+
+def test_is_move_legal_4_captured_piece_is_opposing_color():
+    game_state = GameState()
+    # Bishop can't take own pawn
+    assert not game_state.is_move_legal(Move(Square(File.F, 1), Square(File.E, 2)))
+
+
+def test_is_move_legal_5_mover_is_pinned():
+
+    # (enemy rook) - - - (my rook) (my king)
+    black_rook = Piece(Color.BLACK, PieceType.ROOK, Square(File.D, 2))
+    white_rook = Piece(Color.WHITE, PieceType.ROOK, Square(File.E, 2))
+    white_king = Piece(Color.WHITE, PieceType.KING, Square(File.F, 2))
+    game_state = GameState(pieces=[black_rook, white_rook, white_king])
+
+    assert not game_state.is_move_legal(Move(Square(File.E, 2), Square(File.E, 3)))
+
+
+def test_is_move_legal_5_mover_is_pinned_v2():
+
+    # (white rook) (white king) => white rook can move
+    white_rook = Piece(Color.WHITE, PieceType.ROOK, Square(File.E, 2))
+    white_king = Piece(Color.WHITE, PieceType.KING, Square(File.F, 2))
+    game_state = GameState(pieces=[white_rook, white_king])
+
+    move_the_rook = Move(Square(File.E, 2), Square(File.E, 3))
+    assert game_state.is_move_legal(move_the_rook)
+
+    # now add a (black rook) like so:
+    #   (black rook) (white rook) (white king) => white rook can't move out of the way
+    black_rook = Piece(Color.BLACK, PieceType.ROOK, Square(File.D, 2))
+    game_state = GameState(pieces=[black_rook, white_rook, white_king])
+
+    assert not game_state.is_move_legal(move_the_rook)
+    # white rook can still take black rook
+    assert game_state.is_move_legal(Move(Square(File.E, 2), Square(File.D, 2)))
+
+
+# TODO en-passant
+# TODO Test:
+#   (6) make sure unmake last move is correctly reverting board state
+
+
 # For debug visualization
 def render_expected_moves(expected_moves: set[str]) -> str:
     rows = ["  a b c d e f g h"]

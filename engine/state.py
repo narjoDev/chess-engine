@@ -115,7 +115,7 @@ class Piece:
         self.color = color
         self.piece_type = piece_type
         self.square = square
-        self.has_moved: bool = False
+        self.number_of_moves: int = 0
 
 
 @dataclass
@@ -185,7 +185,6 @@ class GameState:
         # the move does not place the mover in check (handles pins)
         self.make_move(move)
         is_in_check = self.is_color_in_check(moving_piece.color)
-        # TODO: implement unmake_last_move
         self.unmake_last_move()
         if is_in_check:
             return False
@@ -195,7 +194,8 @@ class GameState:
 
     def get_legal_moves(self) -> list[Move]:
         """Get all legal moves for the current player."""
-        # Call `get_piece_movable_squares` and filter using `is_move_legal`
+        # TODO: Call `get_piece_movable_squares` and filter using `is_move_legal`
+
         pass
 
     def is_color_in_check(self, color: Color) -> bool:
@@ -215,6 +215,7 @@ class GameState:
         return king_square in enemy_attack_squares
 
     def is_color_in_checkmate(self, color: Color) -> bool:
+        # TODO
         # in check true
         # and legal moves empty
         pass
@@ -226,7 +227,9 @@ class GameState:
             captured_piece = self.board.get(move.en_passant_captured_square)
         else:
             captured_piece = self.board.get(move.end)
+
         self.history.append(HistoryItem(move=move, captured_piece=captured_piece))
+
         if captured_piece:
             # Remove captured piece
             self.pieces = [piece for piece in self.pieces if piece != captured_piece]
@@ -234,13 +237,28 @@ class GameState:
 
         # Move the piece
         move_piece = self.board[move.start]
-        move_piece.has_moved = True
+        move_piece.number_of_moves += 1
         move_piece.square = move.end
         self.board[move.end] = move_piece
         del self.board[move.start]
 
-    def unmake_last_move(self) -> bool:
-        pass
+    def unmake_last_move(self):
+        # Remove history
+        history_item = self.history.pop()
+        move = history_item.move
+        captured_piece = history_item.captured_piece
+        moved_piece = self.board[move.end]
+
+        # Restore containers (self.pieces and self.board)
+        self.board[move.start] = moved_piece
+        del self.board[move.end]
+        if captured_piece:
+            self.board[captured_piece.square] = captured_piece
+            self.pieces.append(captured_piece)
+
+        # Move the piece back
+        moved_piece.number_of_moves -= 1
+        moved_piece.square = move.start
 
     def get_piece_attacked_squares(self, piece: Piece) -> list[Square]:
         # takes into account:
@@ -291,7 +309,7 @@ class GameState:
         return attacked_squares
 
     def get_piece_movable_squares(self, piece: Piece) -> list[Square]:
-        # "movable" includes attacked squares
+        # NOTE: "movable" includes attacked squares
         # excludes squares with friendly pieces
         # does not take into account pins
         squares = self.get_piece_attacked_squares(piece)
@@ -309,7 +327,7 @@ class GameState:
                 squares.append(square)
 
             # Pawn move by 2
-            if not piece.has_moved:
+            if piece.number_of_moves == 0:
                 square = piece.square.offset(f, r * 2)
                 if square:
                     squares.append(square)
