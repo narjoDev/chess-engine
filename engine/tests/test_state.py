@@ -292,8 +292,22 @@ def test_is_move_legal_6_pawn_threatened_squares():
     assert not game_state.is_move_legal(capture_empty_move)
 
 
-# TODO Test:
-#   (6) make sure unmake last move is correctly reverting board state
+def test_unmake_last_move():
+    white_pawn = Piece(Color.WHITE, PieceType.PAWN, Square(File.E, 2))
+    black_pawn = Piece(Color.BLACK, PieceType.PAWN, Square(File.D, 3))
+    game_state = GameState(pieces=[white_pawn, black_pawn])
+
+    game_state.make_move(Move(Square(File.E, 2), Square(File.D, 3)))
+    game_state.unmake_last_move()
+
+    assert game_state.board.get(Square(File.E, 2)) == white_pawn
+    assert game_state.board.get(Square(File.D, 3)) == black_pawn
+
+    assert white_pawn in game_state.pieces
+    assert black_pawn in game_state.pieces
+
+    assert game_state.mover == Color.WHITE
+    assert len(game_state.history) == 0
 
 
 # For debug visualization
