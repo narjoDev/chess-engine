@@ -192,7 +192,12 @@ def test_pawn_is_blocked():
     game_state = GameState(pieces=[white_pawn, black])
 
     move_attack = game_state.get_piece_movable_squares(white_pawn)
-    assert not move_attack
+
+    # movable squares includes empty threatened squares
+    expected_attack = {Square(File.D, 3), Square(File.F, 3)}
+    # movable squares excludes blocked forward move
+    expected_move = set()
+    assert set(move_attack) == (expected_attack | expected_move)
 
 
 # # TODO en passant
