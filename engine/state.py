@@ -107,7 +107,6 @@ class Move:
     start: Square
     end: Square
     en_passant_captured_square: Optional[Square] = None
-    # TODO: consider including captured square in all captures
 
 
 class Piece:
@@ -205,7 +204,6 @@ class GameState:
         if is_in_check:
             return False
 
-        # TODO: test
         return True
 
     def get_legal_moves(self) -> list[Move]:
