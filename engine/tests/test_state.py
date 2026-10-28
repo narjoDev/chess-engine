@@ -310,6 +310,18 @@ def test_unmake_last_move():
     assert len(game_state.history) == 0
 
 
+def test_is_move_legal_unmakes_move():
+    white_pawn = Piece(Color.WHITE, PieceType.PAWN, Square(File.E, 2))
+    black_pawn = Piece(Color.BLACK, PieceType.PAWN, Square(File.D, 3))
+    game_state = GameState(pieces=[white_pawn, black_pawn])
+
+    move = Move(Square(File.E, 2), Square(File.D, 3))
+    assert game_state.is_move_legal(move)
+
+    assert game_state.board.get(Square(File.E, 2)) == white_pawn
+    assert game_state.board.get(Square(File.D, 3)) == black_pawn
+
+
 # For debug visualization
 def render_expected_moves(expected_moves: set[str]) -> str:
     rows = ["  a b c d e f g h"]
