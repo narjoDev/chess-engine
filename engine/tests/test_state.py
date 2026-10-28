@@ -279,6 +279,19 @@ def test_is_move_legal_5_mover_is_pinned_v2():
     assert game_state.is_move_legal(Move(Square(File.E, 2), Square(File.D, 2)))
 
 
+def test_is_move_legal_6_pawn_threatened_squares():
+
+    white_pawn = Piece(Color.WHITE, PieceType.PAWN, Square(File.E, 2))
+    black_blocker = Piece(Color.BLACK, PieceType.PAWN, Square(File.E, 3))
+    black_threatened = Piece(Color.BLACK, PieceType.ROOK, Square(File.D, 3))
+    game_state = GameState(pieces=[white_pawn, black_blocker, black_threatened])
+
+    capture_rook_move = Move(Square(File.E, 2), Square(File.D, 3))
+    assert game_state.is_move_legal(capture_rook_move)
+    capture_empty_move = Move(Square(File.E, 2), Square(File.F, 3))
+    assert not game_state.is_move_legal(capture_empty_move)
+
+
 # TODO Test:
 #   (6) make sure unmake last move is correctly reverting board state
 

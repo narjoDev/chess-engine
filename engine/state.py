@@ -162,8 +162,10 @@ class GameState:
                 - (the piece can move in the direction specified)
                 - (the piece is not blocked from the end square)
             - if the move captures, the captured piece is the opposite color
+            - if the move is a pawn capture, it is either:
+                - en passant OR
+                - there is a piece in the end square
             - the move does not place the mover in check (handles pins)
-            - TODO there must be a piece in the "captured square"
         """
         # the start square contains a piece
         moving_piece = self.board.get(move.start)
@@ -178,11 +180,23 @@ class GameState:
         if move.end not in self.get_piece_movable_squares(moving_piece):
             return False
 
-        # if the move captures, the captured piece is the opposite color
-        # TODO en passant
-        captured_piece = self.board.get(move.end)
-        if captured_piece and captured_piece.color == moving_piece.color:
-            return False
+        # special case for pawns
+        if moving_piece.piece_type == PieceType.PAWN:
+            # if move is pawn capturing (no special case for moves forward)
+            if move.start.file != move.end.file:
+                if move.en_passant_captured_square:
+                    # TODO en passant
+                    pass
+                else:  # normal pawn capture
+                    captured_piece = self.board.get(move.end)
+                    # diagonal pawn move only legal if there is a piece to capture
+                    if not captured_piece or captured_piece.color == moving_piece.color:
+                        return False
+        else:  # not a pawn
+            # if the move captures, the captured piece is the opposite color
+            captured_piece = self.board.get(move.end)
+            if captured_piece and captured_piece.color == moving_piece.color:
+                return False
 
         # the move does not place the mover in check (handles pins)
         self.make_move(move)
